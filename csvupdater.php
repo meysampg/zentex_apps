@@ -13,6 +13,7 @@
 			width:280px;
 			resize:none;
 			height:65px;
+			color:#000;
 		}
 		.rtlInput{
 			direction:rtl;
@@ -39,6 +40,15 @@
 		.hidden{
 			display:none;
 		}
+		.state{
+			font-family:tahoma;
+			font-size:11px;
+			text-align:center;
+			position:fixed;
+			top:3px;
+			left:3px;
+			background-color:#bff5e3;
+		}
 	</style>
 </head>
 <body>
@@ -62,13 +72,15 @@ if(isset($_POST['uploadBtn']) || isset($_GET['resume']))
 	$fp = fopen($uploadFolder.$nameOfFile, 'r');
 	
 	$row = 1;
+	$translated = 0;
+	
 	echo '<form method="POST" name="transForm" class="transForm" action="'.htmlentities($_SERVER['PHP_SELF']).'?action=edit">';
 	echo "\n";
 	
 	echo '<input class="hidden" name="uploadFolder" value="'.htmlentities($uploadFolder).'" />';
 	echo '<input class="hidden" name="nameOfFile" value="'.htmlentities($nameOfFile).'" />';
 	
-	while( ($data = fgetcsv($fp)) !== false )
+	while( ($data = fgetcsv($fp)) && !feof($fp) )
 	{
 		if(isset($data[3]))
 		{
@@ -79,12 +91,17 @@ if(isset($_POST['uploadBtn']) || isset($_GET['resume']))
 			$persianString = '';
 		}
 		
+		if(strlen(trim($persianString)))
+		{
+			++$translated;
+		}
+		
 		echo '<div class="row">';
 		echo '<!-- '.$row.' -->';
-		echo '<input type="hidden" name="id[]" value="'.$data[0].'" />';
-		echo '<input type="hidden" name="category[]" value="'.$data[1].'" />';
-		echo '<textarea name="source[]">'. $data[2] . '</textarea>';
-		echo '<textarea name="translate[]" class="rtlInput">'.$persianString.'</textarea>';
+		echo '<input type="hidden" name="id[]" value="'.htmlentities($data[0]).'" />';
+		echo '<input type="hidden" name="category[]" value="'.htmlentities($data[1]).'" />';
+		echo '<textarea name="source[]" readonly>'. htmlentities($data[2]) . '</textarea>';
+		echo '<textarea name="translate[]" class="rtlInput">'.htmlentities($persianString).'</textarea>';
 		echo "</div>\n";
 		
 		++$row;
@@ -93,6 +110,7 @@ if(isset($_POST['uploadBtn']) || isset($_GET['resume']))
 	echo '<input type="submit" name="saveBtn" value="Save" class="saveBtn" />';
 	echo '<input type="button" value="Download" class="dwnBtn" onClick="parent.location=\'http://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?dwn='.$nameOfFile.'\'" />';
 	echo '</form>';
+	echo '<div class="state">' . $translated . ' of ' . ($row-1) .' (' . substr((($translated/($row-1))*100),0,5) . '%)</div>';
 	
 	fclose($fp);
 }
@@ -100,13 +118,12 @@ elseif(isset($_GET['action']))
 {		
 	
 	$fileName = html_entity_decode($_POST['uploadFolder']).html_entity_decode($_POST['nameOfFile']);
-	echo $fileName;
 	
 	$fp = fopen($fileName, "w");
 	
 	for($i=0; $i<count($_POST['id']); ++$i)
 	{
-		fputcsv($fp, array($_POST['id'][$i], $_POST['category'][$i], $_POST['source'][$i], $_POST['translate'][$i]));	
+		fputcsv($fp, array(html_entity_decode($_POST['id'][$i]), html_entity_decode($_POST['category'][$i]), html_entity_decode($_POST['source'][$i]), html_entity_decode($_POST['translate'][$i])));	
 	}
 	
 	fclose($fp);
