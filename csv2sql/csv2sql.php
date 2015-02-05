@@ -1,5 +1,5 @@
 <?php
-if($argc < 3)
+if( $argc < 3 )
 {
 	echo "Use in correct format:\n";
 	echo "\tphp csv2sql.php inputFileName.csv outputFileName.sql [verbose (0/1)]\n";
@@ -35,7 +35,7 @@ if( ($fp = fopen($argv[1], 'r')) !== false )
 		
 		++$id;
 		
-		if($id % 100 === 0)
+		if( $id % 100 === 0 )
 		{
 			fwrite($outFP, $buffer);
 			$buffer = '';
@@ -47,6 +47,16 @@ if( ($fp = fopen($argv[1], 'r')) !== false )
 		}
 	}
 	
+	if( $id % 100 !== 0 )
+	{
+	        fwrite($outFP, $buffer);
+			
+		if( isset($argv[3]) && (int)$argv[3] )
+		{
+			echo "Buffer flushed.\n";
+		}
+	}
+			
 	fclose($fp);
 	fclose($outFP);
 	
